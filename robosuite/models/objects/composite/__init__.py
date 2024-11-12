@@ -6,3 +6,4 @@ from .hollow_cylinder import HollowCylinderObject
 from .cone import ConeObject
 from .hook_frame import HookFrame
 from .stand_with_mount import StandWithMount
+from .stand_with_mount_hook import StandWithMountHook
