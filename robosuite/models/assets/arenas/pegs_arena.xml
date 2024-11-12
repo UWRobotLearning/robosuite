@@ -50,6 +50,26 @@
       <geom pos="0 0 0" size="0.02 0.1" type="cylinder" group="0" friction="1 0.005 0.0001"/>
       <geom pos="0 0 0" size="0.02 0.1" type="cylinder" conaffinity="0" contype="0" group="1" material="smetal" />
     </body>
+
+    <body name="hook" pos="-0.0 -0.2 0.85">
+       <geom pos="0 0 0" size="0.04 0.04 0.005" type="box" group="0" friction="1 0.005 0.0001"/>
+       <geom pos="0 0 0" size="0.04 0.04 0.005" type="box" conaffinity="0" contype="0" group="1" material="bmetal"/>
+       <geom pos="0 -0.02 0.005" size="0.01 0.01 0.1" type="box" group="0" friction="1 0.005 0.0001"/>
+       <geom pos="0 -0.02 0.005" size="0.01 0.01 0.1" type="box" conaffinity="0" contype="0" group="1" material="bmetal"/>
+       <geom pos="0.006 0.02 0.10" size="0.01 0.04 0.01" type="box" group="0" friction="1 0.005 0.0001"/>
+       <geom pos="0.006 0.02 0.10" size="0.01 0.04 0.01" type="box" conaffinity="0" contype="0" group="1" material="bmetal"/>  
+    </body>
+
+    <body name="insertion" pos="-0 0.2 0.85">
+      <geom pos="-0.023 0 0" size="0.0105 0.0385 0.0275" type="box" group="0" friction="1 0.005 0.0001"/>
+      <geom pos="0.0 0.028 0" size="0.025 0.0105 0.0275" type="box" group="0" friction="1 0.005 0.0001"/>
+      <geom pos="0.0 -0.028 0" size="0.025 0.0105 0.0275" type="box" group="0" friction="1 0.005 0.0001"/>
+      <geom pos="0.023 0 0" size="0.0105 0.0385 0.0275" type="box" group="0" friction="1 0.005 0.0001"/>      
+      <geom pos="-0.023 0 0" size="0.0105 0.0385 0.0275" type="box" conaffinity="0" contype="0" group="1" material="bmetal" />
+      <geom pos="0.0 0.028 0" size="0.025 0.0105 0.0275" type="box" conaffinity="0" contype="0" group="1" material="bmetal" />
+      <geom pos="0.0 -0.028 0" size="0.025 0.0105 0.0275" type="box" conaffinity="0" contype="0" group="1" material="bmetal" />
+      <geom pos="0.023 0 0" size="0.0105 0.0385 0.0275" type="box" conaffinity="0" contype="0" group="1" material="bmetal" />
+    </body>
     <light pos="1.0 1.0 1.5" dir="-0.2 -0.2 -1" specular="0.3 0.3 0.3" directional="true" castshadow="false"/>
     <!-- front view -->
     <camera mode="fixed" name="frontview" pos="1.6 0 1.45" quat="0.56 0.43 0.43 0.56"/>
