@@ -206,10 +206,30 @@ class UniformRandomSampler(ObjectPositionSampler):
             return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
         elif self.rotation_axis == "z":
             return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+        elif self.rotation_axis == "long_base":
+            # Causes tip to point to/away from screen with random rotations around z
+            q1 = np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+            q2 = np.array([np.cos(np.pi / 4), np.sin(np.pi / 4), 0, 0])
+            return quat_multiply(q2, q1)
+        elif self.rotation_axis == "tip":
+            # Causes peg to stand on tip  with random rotations around z
+            # Can change q1 to the quat for a rotation around a different axis
+            q1 = np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+            q2 = np.array([np.cos(np.pi / 4), 0, np.sin(np.pi / 4), 0])
+            return quat_multiply(q2, q1)
+        elif self.rotation_axis == "short_base":
+            # Causes tip to point to ceiling, with random rotations around z
+            # Can change q1 to the quat for a rotation around a different axis
+            q1 = np.array([np.cos(rot_angle / 2), 0, 0, -np.sin(rot_angle / 2)])
+            q2 = np.array([np.cos(np.pi / 4), 0, -np.sin(np.pi / 4), 0])
+            return quat_multiply(q2, q1)
+        elif self.rotation_axis ==  "tipped":
+            # tip is tipped over, slanted towards table
+            return NotImplementedError
         else:
             # Invalid axis specified, raise error
             raise ValueError(
-                "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(self.rotation_axis)
+                "Invalid rotation axis specified. Must be 'x', 'y', 'z', 'short_base', 'long_base', or 'tip'. Got: {}".format(self.rotation_axis)
             )
 
     def sample(self, fixtures=None, reference=None, on_top=True):
