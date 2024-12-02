@@ -89,6 +89,7 @@ class Keyboard(Device):
             self.raw_drotation - self.last_drotation
         )  # create local variable to return, then reset internal drotation
         self.last_drotation = np.array(self.raw_drotation)
+        # print(raw_drotation, self.rotation, dpos)
         return dict(
             dpos=dpos,
             rotation=self.rotation,

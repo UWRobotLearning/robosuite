@@ -427,7 +427,6 @@ class MujocoEnv(metaclass=EnvMeta):
                 - (dict) empty dict to be filled with information by subclassed method
         """
         reward = self.reward(action)
-
         # done if number of elapsed timesteps is greater than horizon
         self.done = (self.timestep >= self.horizon) and not self.ignore_done
 

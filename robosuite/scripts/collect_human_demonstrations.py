@@ -54,13 +54,13 @@ def collect_human_trajectory(env, device, arm, env_configuration):
         action, grasp = input2action(
             device=device, robot=active_robot, active_arm=arm, env_configuration=env_configuration
         )
-
         # If action is none, then this a reset so we should break
         if action is None:
             break
 
         # Run environment step
-        env.step(action)
+        obs, rew, _, _ = env.step(action)
+        # print(rew)
         env.render()
 
         # Also break if we complete the task
@@ -239,6 +239,14 @@ if __name__ == "__main__":
         from robosuite.devices import SpaceMouse
 
         device = SpaceMouse(pos_sensitivity=args.pos_sensitivity, rot_sensitivity=args.rot_sensitivity)
+    elif args.device == "spacemouse_hybrid":
+        from robosuite.devices import SpaceMouseHybrid
+
+        device = SpaceMouseHybrid(pos_sensitivity=args.pos_sensitivity, rot_sensitivity=args.rot_sensitivity)
+    elif args.device == "spacemouse_pos":
+        from robosuite.devices import SpaceMouseHybrid2
+        
+        device = SpaceMouseHybrid2(pos_sensitivity=args.pos_sensitivity, rot_sensitivity=args.rot_sensitivity)
     else:
         raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
 

@@ -130,7 +130,6 @@ class OperationalSpaceController(Controller):
         uncouple_pos_ori=True,
         **kwargs,  # does nothing; used so no error raised when dict is passed with extra terms used previously
     ):
-
         super().__init__(
             sim,
             eef_name,

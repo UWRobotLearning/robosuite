@@ -66,7 +66,7 @@ class VisualizationWrapper(Wrapper):
                 assert "name" in indicator_config, "Name must be specified for all indicator object configurations!"
                 # Add this configuration to the internal array
                 self.indicator_configs.append(indicator_config)
-
+                
         # Create internal dict to store visualization settings (set to True by default)
         self._vis_settings = {vis: True for vis in self.env._visualizations}
 

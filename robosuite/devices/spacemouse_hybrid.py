@@ -19,7 +19,7 @@ For Linux support, you can find open-source Linux drivers and SDKs online.
 import threading
 import time
 from collections import namedtuple
-
+from pynput.keyboard import Controller, Key, Listener
 import numpy as np
 
 try:
@@ -130,6 +130,10 @@ class SpaceMouse(Device):
 
         print("Manufacturer: %s" % self.device.get_manufacturer_string())
         print("Product: %s" % self.device.get_product_string())
+        
+        self._reset_state = 0
+        self._enabled = False
+        self._pos_step = 0.05
 
         # 6-DOF variables
         self.x, self.y, self.z = 0, 0, 0
@@ -148,6 +152,13 @@ class SpaceMouse(Device):
         self.thread = threading.Thread(target=self.run)
         self.thread.daemon = True
         self.thread.start()
+        
+        # make a thread to listen to keyboard and register our callback functions
+        self.listener = Listener(on_press=self.on_press, on_release=self.on_release)
+
+        # start listening
+        self.listener.start()
+
 
     @staticmethod
     def _display_controls():
@@ -176,10 +187,13 @@ class SpaceMouse(Device):
         # Reset 6-DOF variables
         self.x, self.y, self.z = 0, 0, 0
         self.roll, self.pitch, self.yaw = 0, 0, 0
+        self.pos = np.zeros(3)
+        self.last_pos = np.zeros(3)
         # Reset control
         self._control = np.zeros(6)
         # Reset grasp
         self.single_click_and_hold = False
+        self.grasp = False
 
     def start_control(self):
         """
@@ -198,6 +212,8 @@ class SpaceMouse(Device):
             dict: A dictionary containing dpos, orn, unmodified orn, grasp, and reset
         """
         dpos = self.control[:3] * 0.005 * self.pos_sensitivity
+        dpos = self.pos - self.last_pos
+        self.last_pos = np.array(self.pos)
         roll, pitch, yaw = self.control[3:] * 0.005 * self.rot_sensitivity
 
         # convert RPY to an absolute orientation
@@ -224,15 +240,15 @@ class SpaceMouse(Device):
             d = self.device.read(13)
             if d is not None and self._enabled:
 
-                if self.product_id == 50741:
+                if self.product_id == 50741 or self.product_id == 50726:
                     ## logic for older spacemouse model
 
-                    if d[0] == 1:  ## readings from 6-DoF sensor
-                        self.y = convert(d[1], d[2])
-                        self.x = convert(d[3], d[4])
-                        self.z = convert(d[5], d[6]) * -1.0
+                    # if d[0] == 1:  ## readings from 6-DoF sensor
+                    #     self.y = convert(d[1], d[2])
+                    #     self.x = convert(d[3], d[4])
+                    #     self.z = convert(d[5], d[6]) * -1.0
 
-                    elif d[0] == 2:
+                    if d[0] == 2:
 
                         self.roll = convert(d[1], d[2])
                         self.pitch = convert(d[3], d[4])
@@ -307,7 +323,52 @@ class SpaceMouse(Device):
         if self.single_click_and_hold:
             return 1.0
         return 0
+    
+    def on_press(self, key):
+        """
+        Key handler for key presses.
+        Args:
+            key (str): key that was pressed
+        """
 
+        try:
+            # controls for moving position
+            if key.char == "w":
+                self.pos[0] -= self._pos_step * self.pos_sensitivity  # dec x
+            elif key.char == "s":
+                self.pos[0] += self._pos_step * self.pos_sensitivity  # inc x
+            elif key.char == "a":
+                self.pos[1] -= self._pos_step * self.pos_sensitivity  # dec y
+            elif key.char == "d":
+                self.pos[1] += self._pos_step * self.pos_sensitivity  # inc y
+            elif key.char == "f":
+                self.pos[2] -= self._pos_step * self.pos_sensitivity  # dec z
+            elif key.char == "r":
+                self.pos[2] += self._pos_step * self.pos_sensitivity  # inc z
+
+        except AttributeError as e:
+            pass
+
+    def on_release(self, key):
+        """
+        Key handler for key releases.
+        Args:
+            key (str): key that was pressed
+        """
+
+        try:
+            # controls for grasping
+            if key == Key.space:
+                self.grasp = not self.grasp  # toggle gripper
+
+            # user-commanded reset
+            elif key.char == "q":
+                self._reset_state = 1
+                self._enabled = False
+                self._reset_internal_state()
+
+        except AttributeError as e:
+            pass
 
 if __name__ == "__main__":
 
