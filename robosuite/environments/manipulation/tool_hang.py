@@ -143,6 +143,7 @@ class ToolHang(SingleArmEnv):
         use_object_obs=True,
         reward_scale=1.0,
         reward_shaping=False,
+        placement_initializer=None,
         has_renderer=False,
         has_offscreen_renderer=True,
         render_camera="frontview",
@@ -172,6 +173,9 @@ class ToolHang(SingleArmEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+
+        # placement initializer
+        self.placement_initializer = placement_initializer
 
         super().__init__(
             robots=robots,
@@ -342,46 +346,53 @@ class ToolHang(SingleArmEnv):
         """
         Helper function for defining placement initializer and object sampling bounds
         """
-        # Create placement initializer
-        self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
+        if self.placement_initializer is None:
+            # Create placement initializer
+            self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
 
-        # Pre-define settings for each object's placement
-        objects = [self.stand, self.frame, self.tool]
-        x_centers = [-self.table_full_size[0] * 0.1, -self.table_full_size[0] * 0.05, self.table_full_size[0] * 0.05]
-        y_centers = [0.0, -self.table_full_size[1] * 0.3, -self.table_full_size[1] * 0.25]
-        x_tols = [0.0, 0.02, 0.02]
-        y_tols = [0.0, 0.02, 0.02]
-        rot_centers = [0, (-np.pi / 2) + (np.pi / 6), (-np.pi / 2) - (np.pi / 9.0)]
-        rot_tols = [0.0, np.pi / 18, np.pi / 18.0]
-        rot_axes = ["z", "y", "z"]
-        z_offsets = [
-            0.001,
-            (self.frame_args["frame_thickness"] - self.frame_args["frame_height"]) / 2.0
-            + 0.001
-            + (self.stand_args["base_thickness"] / 2.0)
-            + (self.frame_args["grip_size"][1]),
-            0.001,
-        ]
-        if ("tip_size" in self.frame_args) and (self.frame_args["tip_size"] is not None):
-            z_offsets[1] -= self.frame_args["tip_size"][0] + 2.0 * self.frame_args["tip_size"][3]
-        for obj, x, y, x_tol, y_tol, r, r_tol, r_axis, z_offset in zip(
-            objects, x_centers, y_centers, x_tols, y_tols, rot_centers, rot_tols, rot_axes, z_offsets
-        ):
-            # Create sampler for this object and add it to the sequential sampler
-            self.placement_initializer.append_sampler(
-                sampler=UniformRandomSampler(
-                    name=f"{obj.name}ObjectSampler",
-                    mujoco_objects=obj,
-                    x_range=[x - x_tol, x + x_tol],
-                    y_range=[y - y_tol, y + y_tol],
-                    rotation=[r - r_tol, r + r_tol],
-                    rotation_axis=r_axis,
-                    ensure_object_boundary_in_range=False,
-                    ensure_valid_placement=False,
-                    reference_pos=self.table_offset,
-                    z_offset=z_offset,
+            # Pre-define settings for each object's placement
+            objects = [self.stand, self.frame, self.tool]
+            x_centers = [-self.table_full_size[0] * 0.1, -self.table_full_size[0] * 0.05, self.table_full_size[0] * 0.05]
+            y_centers = [0.0, -self.table_full_size[1] * 0.3, -self.table_full_size[1] * 0.25]
+            x_tols = [0.0, 0.02, 0.02]
+            y_tols = [0.0, 0.02, 0.02]
+            rot_centers = [0, (-np.pi / 2) + (np.pi / 6), (-np.pi / 2) - (np.pi / 9.0)]
+            rot_tols = [0.0, np.pi / 18, np.pi / 18.0]
+            rot_axes = ["z", "y", "z"]
+            z_offsets = [
+                0.001,
+                (self.frame_args["frame_thickness"] - self.frame_args["frame_height"]) / 2.0
+                + 0.001
+                + (self.stand_args["base_thickness"] / 2.0)
+                + (self.frame_args["grip_size"][1]),
+                0.001,
+            ]
+            if ("tip_size" in self.frame_args) and (self.frame_args["tip_size"] is not None):
+                z_offsets[1] -= self.frame_args["tip_size"][0] + 2.0 * self.frame_args["tip_size"][3]
+            for obj, x, y, x_tol, y_tol, r, r_tol, r_axis, z_offset in zip(
+                objects, x_centers, y_centers, x_tols, y_tols, rot_centers, rot_tols, rot_axes, z_offsets
+            ):  
+                                
+                # Create sampler for this object and add it to the sequential sampler
+                self.placement_initializer.append_sampler(
+                    sampler=UniformRandomSampler(
+                        name=f"{obj.name}ObjectSampler",
+                        mujoco_objects=obj,
+                        x_range=[x - x_tol, x + x_tol],
+                        y_range=[y - y_tol, y + y_tol],
+                        rotation=[r - r_tol, r + r_tol],
+                        rotation_axis=r_axis,
+                        ensure_object_boundary_in_range=False,
+                        ensure_valid_placement=False,
+                        reference_pos=self.table_offset,
+                        z_offset=z_offset,
+                    )
                 )
-            )
+        else:
+            self.placement_initializer.reset()
+            self.placement_initializer.add_objects_to_sampler(sampler_name='standObjectSampler', mujoco_objects=self.stand)
+            self.placement_initializer.add_objects_to_sampler(sampler_name='frameObjectSampler', mujoco_objects=self.frame)
+            self.placement_initializer.add_objects_to_sampler(sampler_name='toolObjectSampler', mujoco_objects=self.tool)
 
     def _setup_references(self):
         """
